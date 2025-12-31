@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.train.mapper.TrainQuestionMapper">
+
+    <!-- 随机抽取指定数量的题目（仅启用状态） -->
+    <select id="selectRandomQuestions" resultType="com.train.entity.TrainQuestion">
+        SELECT question_id, question_content, question_img
+        FROM train_question
+        <where>
+            status = 1
+            <if test="orgIds != null and orgIds.size() > 0">
+                AND org_id IN
+                <foreach collection="orgIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY RANDOM()
+        LIMIT #{limit}
+    </select>
+
+    <!-- 按机构随机抽题（仅启用状态），排除旧题目ID，保证新题不重复 -->
+    <select id="selectRandomQuestionsExcludeOldIds" resultType="com.train.entity.TrainQuestion">
+        SELECT
+        question_id,
+        question_content,
+        question_img
+        FROM train_question tq
+        <where>
+            tq.status = 1
+            <if test="orgIds != null and orgIds.size() > 0">
+                AND tq.org_id IN
+                <foreach collection="orgIds" item="orgId" open="(" separator="," close=")">
+                    #{orgId}
+                </foreach>
+            </if>
+            <if test="excludeQuestionIds != null and excludeQuestionIds.size() > 0">
+                AND tq.question_id NOT IN
+                <foreach collection="excludeQuestionIds" item="qId" open="(" separator="," close=")">
+                    #{qId}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY RANDOM()
+        LIMIT #{limit}
+    </select>
+
+    <!-- 根据题目ID查询答案（用于自动判分） -->
+    <select id="selectAnswer" resultType="com.train.entity.TrainQuestion">
+        SELECT question_id, answer
+        FROM train_question
+        WHERE question_id = #{questionId} AND status = 1
+    </select>
+
+
+</mapper>

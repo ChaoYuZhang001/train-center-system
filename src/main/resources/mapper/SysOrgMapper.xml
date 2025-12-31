@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.train.mapper.SysOrgMapper">
+
+    <!-- 机构模糊查询 -->
+    <select id="selectOrgByLike" resultType="com.train.entity.SysOrg">
+        SELECT org_id, org_name, admin_account, admin_name, status, create_time
+        FROM sys_org
+        <where>
+            <if test="orgName != null and orgName != ''">
+                AND org_name LIKE CONCAT('%', #{orgName}, '%')
+            </if>
+            <if test="adminAccount != null and adminAccount != ''">
+                AND admin_account LIKE CONCAT('%', #{adminAccount}, '%')
+            </if>
+            <if test="adminName != null and adminName != ''">
+                AND admin_name LIKE CONCAT('%', #{adminName}, '%')
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 校验机构名称唯一性 -->
+    <select id="checkOrgNameUnique" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM sys_org WHERE org_name = #{orgName}
+    </select>
+
+    <!-- 校验管理员账号唯一性 -->
+    <select id="checkAdminAccountUnique" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM sys_org WHERE admin_account = #{adminAccount}
+    </select>
+</mapper>

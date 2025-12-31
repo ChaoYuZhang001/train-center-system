@@ -1,0 +1,39 @@
+spring:
+  profiles:
+    active: dev  # 激活开发环境配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+# MyBatis-Plus配置
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.train.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# JWT配置
+jwt:
+  secret: train-center-secret-key-2025  # 密钥（生产环境需加密存储）
+  expiration: 600  # Token过期时间（2小时）
+
+aes:
+  key: 1234567887654322
+
+train:
+  video:
+    coverUrlPrefix: http://localhost:8080/train-center-static/cover/
+    playUrlPrefix: http://localhost:8080/train-center-static/play/
+  question:
+    imageUrlPrefix: http://localhost:8080/train-center-static/question/
+  exam:
+    session:
+      expire:
+        minutes: 30

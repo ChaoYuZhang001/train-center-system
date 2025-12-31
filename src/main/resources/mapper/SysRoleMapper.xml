@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.train.mapper.SysRoleMapper">
+
+    <!-- 角色模糊查询（分页） -->
+    <select id="selectRoleByLike" resultType="com.train.entity.SysRole">
+        SELECT role_id, role_name, role_desc, org_id, status, create_by, create_time
+        FROM sys_role
+        <where>
+            <if test="roleName != null and roleName != ''">
+                AND role_name LIKE CONCAT('%', #{roleName}, '%')
+            </if>
+            <if test="createBy != null and createBy != ''">
+                AND create_by LIKE CONCAT('%', #{createBy}, '%')
+            </if>
+        </where>
+        ORDER BY sort ASC, create_time DESC
+    </select>
+
+    <!-- 校验同一机构内角色名称唯一性 -->
+    <select id="checkRoleNameUnique" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM sys_role
+        WHERE role_name = #{roleName} AND org_id = #{orgId}
+    </select>
+
+    <!-- 根据角色ID查询关联的菜单ID列表 -->
+    <select id="selectMenuIdsByRoleId" resultType="java.lang.Long">
+        SELECT menu_id FROM sys_role_menu
+        WHERE role_id = #{roleId}
+        ORDER BY menu_id ASC
+    </select>
+
+</mapper>

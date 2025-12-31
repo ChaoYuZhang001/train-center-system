@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.train.mapper.SysUserMapper">
+
+    <!-- 用户模糊查询（分页） -->
+    <select id="selectUserByLike" resultType="com.train.entity.SysUser">
+        SELECT user_id, account, user_name, type, status, org_id, create_by, create_time
+        FROM sys_user
+        <where>
+            <if test="account != null and account != ''">
+                AND account LIKE CONCAT('%', #{account}, '%')
+            </if>
+            <if test="userName != null and userName != ''">
+                AND user_name LIKE CONCAT('%', #{userName}, '%')
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 校验账号唯一性 -->
+    <select id="checkAccountUnique" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM sys_user WHERE account = #{account}
+    </select>
+
+    <!-- 校验用户名唯一性（同一机构内） -->
+    <select id="checkUserNameUnique" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM sys_user
+        WHERE user_name = #{userName} AND org_id = #{orgId}
+    </select>
+
+    <!-- 根据用户ID查询关联的角色ID列表 -->
+    <select id="selectRoleIdsByUserId" resultType="java.lang.String">
+        SELECT role_id FROM sys_user_role
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 根据账号查询用户（登录认证用，返回完整用户信息） -->
+    <select id="selectUserByAccount" resultType="com.train.entity.SysUser">
+        SELECT *
+        FROM sys_user
+        WHERE account = #{account} AND  org_id = #{orgId} AND status = 1
+    </select>
+
+    <!-- 关联查询：用户 -> 角色 -> 角色-菜单 -> 菜单（权限标识） -->
+    <select id="selectUserPermsByAccount" resultType="java.lang.String">
+        SELECT DISTINCT m.perms
+        FROM sys_user u
+                 LEFT JOIN sys_user_role ur ON u.user_id = ur.user_id
+                 LEFT JOIN sys_role_menu rm ON ur.role_id = rm.role_id
+                 LEFT JOIN sys_menu m ON rm.menu_id = m.menu_id
+        WHERE u.account = #{account}
+          AND u.status = 1
+          AND ur.role_id IS NOT NULL
+          AND rm.menu_id IS NOT NULL
+          AND m.status = 1
+          AND m.perms IS NOT NULL
+          AND m.perms != ''
+    </select>
+</mapper>

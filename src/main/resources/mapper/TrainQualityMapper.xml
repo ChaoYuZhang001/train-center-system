@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.train.mapper.TrainQualityMapper">
+
+    <!-- 质量评价列表分页查询（支持用户ID、机构ID筛选） -->
+    <select id="selectQualityList" resultType="com.train.entity.TrainQuality">
+        SELECT quality_id, user_id, org_id, score, start_time, end_time, used_time, create_time
+        FROM train_quality
+        <where>
+            <if test="userId != null and userId != 0">
+                AND user_id = #{userId}
+            </if>
+            <if test="orgId != null and orgId != ''">
+                AND org_id = #{orgId}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据评价ID查询答题详情 -->
+    <select id="selectQualityDetail" resultType="com.train.entity.TrainQuality">
+        SELECT quality_id, user_id, org_id, score, start_time, end_time, used_time, create_time
+        FROM train_quality
+        WHERE quality_id = #{qualityId}
+    </select>
+
+</mapper>
