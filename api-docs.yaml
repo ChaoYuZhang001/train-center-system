@@ -1,0 +1,1224 @@
+openapi: 3.0.1
+info:
+  title: 培训中心系统接口文档
+  description: 包含系统管理、培训视频、在线练习、质量评价等模块接口
+  contact:
+    name: 开发团队
+    email: train@example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  version: 1.0.0
+servers:
+- url: http://127.0.0.1:8888
+  description: Generated server url
+security:
+- JWT: []
+tags:
+- name: 系统管理-菜单管理
+  description: 菜单分页查询、树形查询、新增、编辑、删除、状态切换接口
+- name: 系统管理-角色管理
+  description: 角色分页查询、新增、编辑、删除、权限分配接口
+- name: 培训中心
+  description: 培训中心 -包含 视频培训 在线练习 多中心质量控制
+- name: 认证管理
+  description: 用户登录、退出接口
+- name: 系统管理-用户管理
+  description: 用户分页查询、新增、编辑、删除、密码重置接口
+- name: 系统管理-机构管理
+  description: 机构分页查询、新增、编辑、删除、状态切换接口
+paths:
+  /train/sys/user/resetPwd:
+    put:
+      tags:
+      - 系统管理-用户管理
+      summary: 重置用户密码
+      description: 密码自动加密，超级管理员不可重置
+      operationId: resetUserPwd
+      parameters:
+      - name: userId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: newPassword
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/sys/user/edit:
+    put:
+      tags:
+      - 系统管理-用户管理
+      summary: 编辑用户
+      description: 同时更新角色，不修改密码，系统超级管理员不可编辑
+      operationId: editUser
+      parameters:
+      - name: roleIds
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SysUser'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/sys/user/changeStatus:
+    put:
+      tags:
+      - 系统管理-用户管理
+      summary: 切换用户状态
+      description: 启用/禁用用户，禁用后用户无法登录
+      operationId: changeUserStatus
+      parameters:
+      - name: userId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: status
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/sys/role/edit:
+    put:
+      tags:
+      - 系统管理-角色管理
+      summary: 编辑角色
+      description: 同时更新菜单权限，系统超级管理员角色不可编辑
+      operationId: editRole
+      parameters:
+      - name: menuIds
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SysRole'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/sys/role/changeStatus:
+    put:
+      tags:
+      - 系统管理-角色管理
+      summary: 切换角色状态
+      description: 启用/禁用角色，禁用后关联用户失去该角色权限
+      operationId: changeRoleStatus
+      parameters:
+      - name: roleId
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: status
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/sys/org/edit:
+    put:
+      tags:
+      - 系统管理-机构管理
+      summary: 编辑机构
+      description: 校验机构名称唯一性，不修改管理员密码
+      operationId: editOrg
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SysOrg'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/sys/org/changeStatus:
+    put:
+      tags:
+      - 系统管理-机构管理
+      summary: 切换机构状态
+      description: 启用/禁用机构，禁用后机构内用户无法登录
+      operationId: changeOrgStatus
+      parameters:
+      - name: orgId
+        in: query
+        description: 机构ID
+        required: true
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: 目标状态（0=禁用，1=启用）
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/training/question/judge:
+    post:
+      tags:
+      - 培训中心
+      summary: 答题提交与校验
+      description: 答题提交与校验
+      operationId: judge
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainJudgeQuestionQuery'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultTrainJudgeQuestionDTO'
+  /train/sys/user/add:
+    post:
+      tags:
+      - 系统管理-用户管理
+      summary: 新增用户
+      description: 同时分配角色，密码默认a123456
+      operationId: addUser
+      parameters:
+      - name: roleIds
+        in: query
+        description: 角色ID列表
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SysUser'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/sys/role/add:
+    post:
+      tags:
+      - 系统管理-角色管理
+      summary: 新增角色
+      description: 同时分配菜单权限，角色名称同一机构内唯一
+      operationId: addRole
+      parameters:
+      - name: menuIds
+        in: query
+        description: 菜单ID列表
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SysRole'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/sys/org/add:
+    post:
+      tags:
+      - 系统管理-机构管理
+      summary: 新增机构
+      description: 自动创建默认机构管理员，密码默认a123456
+      operationId: addOrg
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SysOrg'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/auth/logout:
+    post:
+      tags:
+      - 认证管理
+      summary: 用户退出
+      description: 传入JWT Token，将Token加入黑名单，使其失效
+      operationId: logout
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/auth/login:
+    post:
+      tags:
+      - 认证管理
+      summary: 用户登录(密码AES对称加密)
+      description: 传入账号、密码和机构ID，认证通过后返回JWT Token
+      operationId: login
+      parameters:
+      - name: account
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: password
+        in: query
+        required: false
+        schema:
+          type: string
+          default: h704/1LvkG555m+12IZcMLfgl6FqcJlRKvyWQWr3yvA=
+      - name: "机构ID,(超级管理员可不传使用系统默认值)"
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+  /train/training/video/{videoId}:
+    get:
+      tags:
+      - 培训中心
+      summary: 根据ID查询视频详情
+      description: 根据视频ID查询视频详情
+      operationId: getVideoById
+      parameters:
+      - name: videoId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultTrainVideo'
+  /train/training/video/list:
+    get:
+      tags:
+      - 培训中心
+      summary: 分页查询视频列表
+      description: 分页查询视频列表
+      operationId: getVideoList
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultIPageTrainVideo'
+  /train/training/question/reRandomQuestions:
+    get:
+      tags:
+      - 培训中心
+      summary: 重新抽题
+      description: 重新抽题
+      operationId: reRandomQuestions
+      parameters:
+      - name: paperId
+        in: query
+        required: false
+        schema:
+          type: string
+          default: "1"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultTrainRandomQuestionOutDTO'
+  /train/training/question/randomQuestions:
+    get:
+      tags:
+      - 培训中心
+      summary: 随机抽取题目
+      description: 随机抽取题目
+      operationId: randomQuestions
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultTrainRandomQuestionOutDTO'
+  /train/sys/user/page:
+    get:
+      tags:
+      - 系统管理-用户管理
+      summary: 用户分页查询
+      description: 支持账号、用户名模糊查询，按权限隔离数据
+      operationId: queryUserPage
+      parameters:
+      - name: pageNum
+        in: query
+        description: 页码
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+        example: 1
+      - name: pageSize
+        in: query
+        description: 每页条数
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+        example: 20
+      - name: account
+        in: query
+        description: 登录账号（模糊查询）
+        required: false
+        schema:
+          type: string
+      - name: userName
+        in: query
+        description: 用户名（模糊查询）
+        required: false
+        schema:
+          type: string
+      - name: orgId
+        in: query
+        description: 所属机构ID（超级管理员专用）
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultIPageSysUser'
+  /train/sys/role/page:
+    get:
+      tags:
+      - 系统管理-角色管理
+      summary: 角色分页查询
+      description: 支持角色名称模糊查询，按权限隔离数据
+      operationId: queryRolePage
+      parameters:
+      - name: pageNum
+        in: query
+        description: 页码
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+        example: 1
+      - name: pageSize
+        in: query
+        description: 每页条数
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+        example: 20
+      - name: roleName
+        in: query
+        description: 角色名称（模糊查询）
+        required: false
+        schema:
+          type: string
+      - name: orgId
+        in: query
+        description: 所属机构ID（超级管理员专用）
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultIPageSysRole'
+  /train/sys/role/listByOrg/{orgId}:
+    get:
+      tags:
+      - 系统管理-角色管理
+      summary: 查询机构启用角色
+      description: 用于用户分配角色时的选择
+      operationId: queryRoleListByOrgId
+      parameters:
+      - name: orgId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultListSysRole'
+  /train/sys/org/page:
+    get:
+      tags:
+      - 系统管理-机构管理
+      summary: 机构分页查询
+      description: 支持机构名称、管理员账号模糊查询，按权限隔离数据
+      operationId: queryOrgPage
+      parameters:
+      - name: pageNum
+        in: query
+        description: 页码
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+        example: 1
+      - name: pageSize
+        in: query
+        description: 每页条数
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+        example: 20
+      - name: orgName
+        in: query
+        description: 机构名称（模糊查询）
+        required: false
+        schema:
+          type: string
+      - name: adminAccount
+        in: query
+        description: 管理员账号（模糊查询）
+        required: false
+        schema:
+          type: string
+      - name: adminName
+        in: query
+        description: 管理员姓名（模糊查询）
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultIPageSysOrg'
+  /train/sys/org/allEnable:
+    get:
+      tags:
+      - 系统管理-机构管理
+      summary: 查询所有启用机构
+      description: 用于登录选择登录哪个机构
+      operationId: queryAllEnableOrg
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultListSysOrg'
+  /train/sys/menu/tree:
+    get:
+      tags:
+      - 系统管理-菜单管理
+      summary: 菜单树形查询
+      description: 返回树形结构菜单，用于前端树形展示和权限分配
+      operationId: queryMenuTree
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultListSysMenu'
+  /train/sys/menu/currentUserPermTree:
+    get:
+      tags:
+      - 系统管理-菜单管理
+      summary: 当前用户权限菜单
+      description: 返回当前登录用户拥有的权限菜单，用于前端动态渲染菜单
+      operationId: queryCurrentUserPermMenuTree
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultListSysMenu'
+  /train/sys/user/delete/{userId}:
+    delete:
+      tags:
+      - 系统管理-用户管理
+      summary: 删除用户
+      description: 机构最后一名管理员不可删除，超级管理员不可删除
+      operationId: deleteUser
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/sys/role/delete/{roleId}:
+    delete:
+      tags:
+      - 系统管理-角色管理
+      summary: 删除角色
+      description: 已关联用户的角色不可删除，不可删除角色禁止操作
+      operationId: deleteRole
+      parameters:
+      - name: roleId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+  /train/sys/org/delete/{orgId}:
+    delete:
+      tags:
+      - 系统管理-机构管理
+      summary: 删除机构
+      description: 仅系统超级管理员可操作，级联删除关联用户/角色
+      operationId: deleteOrg
+      parameters:
+      - name: orgId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultObject'
+components:
+  schemas:
+    ResultObject:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          format: int32
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: object
+          description: 响应数据
+      description: 统一响应结果
+    SysUser:
+      type: object
+      properties:
+        userId:
+          type: integer
+          description: 用户ID
+          format: int64
+        account:
+          type: string
+          description: 登录账号
+        userName:
+          type: string
+          description: 用户名
+        password:
+          type: string
+          description: 登录密码
+        type:
+          type: integer
+          description: 用户类型
+          format: int32
+          example: 1
+        status:
+          type: integer
+          description: 状态
+          format: int32
+          example: 1
+        orgId:
+          type: string
+          description: 所属机构ID
+        isSysAdmin:
+          type: integer
+          description: 是否系统超级管理员
+          format: int32
+          example: 0
+        canDelete:
+          type: integer
+          description: 是否可删除
+          format: int32
+          example: 1
+        createBy:
+          type: string
+          description: 创建人
+        createTime:
+          type: string
+          description: 创建时间
+          format: date-time
+      description: 用户实体类
+    SysRole:
+      type: object
+      properties:
+        roleId:
+          type: string
+          description: 角色ID
+        roleName:
+          type: string
+          description: 角色名称
+        roleDesc:
+          type: string
+          description: 角色描述
+        roleType:
+          type: integer
+          description: 角色类型
+          format: int32
+          example: 0
+        status:
+          type: integer
+          description: 状态
+          format: int32
+          example: 1
+        canDelete:
+          type: integer
+          description: 是否可删除
+          format: int32
+          example: 1
+        sort:
+          type: integer
+          description: 排序序号
+          format: int32
+        createBy:
+          type: string
+          description: 创建人
+        createTime:
+          type: string
+          description: 创建时间
+          format: date-time
+      description: 角色实体类
+    SysOrg:
+      type: object
+      properties:
+        orgId:
+          type: string
+          description: 机构ID
+        orgName:
+          type: string
+          description: 机构名称
+        adminAccount:
+          type: string
+          description: 机构管理员账号
+        adminName:
+          type: string
+          description: 机构管理员姓名
+        adminPassword:
+          type: string
+          description: 机构管理员密码
+        status:
+          type: integer
+          description: 状态
+          format: int32
+          example: 1
+        defaultAdminUserId:
+          type: integer
+          description: 默认机构管理员用户ID
+          format: int64
+        createTime:
+          type: string
+          description: 创建时间
+          format: date-time
+      description: 机构实体类
+    TrainJudgeQuestionQuery:
+      required:
+      - paperId
+      type: object
+      properties:
+        paperId:
+          type: string
+          description: 试卷ID
+        trainRandomQuestionInfoList:
+          type: array
+          description: 题目信息
+          items:
+            $ref: '#/components/schemas/TrainRandomQuestionInfo'
+      description: 判断题查询参数
+    TrainRandomQuestionInfo:
+      required:
+      - answer
+      - questionId
+      type: object
+      properties:
+        questionId:
+          type: integer
+          description: 题目ID
+          format: int64
+        answer:
+          type: string
+          description: 答案
+      description: 题目信息
+    ResultTrainJudgeQuestionDTO:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          format: int32
+        message:
+          type: string
+          description: 响应消息
+        data:
+          $ref: '#/components/schemas/TrainJudgeQuestionDTO'
+      description: 统一响应结果
+    TrainJudgeQuestionDTO:
+      type: object
+      properties:
+        paperId:
+          type: string
+          description: 试卷ID
+        score:
+          type: integer
+          description: 得分
+          format: int32
+        trainRandomQuestionInfoList:
+          type: array
+          description: 题目信息
+          items:
+            $ref: '#/components/schemas/TrainRandomQuestionInfo'
+      description: 判断题信息
+    ResultMapStringObject:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          format: int32
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: object
+          additionalProperties:
+            type: object
+            description: 响应数据
+          description: 响应数据
+      description: 统一响应结果
+    ResultTrainVideo:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          format: int32
+        message:
+          type: string
+          description: 响应消息
+        data:
+          $ref: '#/components/schemas/TrainVideo'
+      description: 统一响应结果
+    TrainVideo:
+      type: object
+      properties:
+        videoId:
+          type: integer
+          description: 视频ID
+          format: int64
+        videoName:
+          type: string
+          description: 视频名称
+        coverUrl:
+          type: string
+          description: 缩略图路径
+        playUrl:
+          type: string
+          description: 播放地址
+        status:
+          type: integer
+          description: 状态
+          format: int32
+          example: 1
+        createTime:
+          type: string
+          description: 创建时间
+          format: date-time
+      description: 响应数据
+    IPageTrainVideo:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int64
+        total:
+          type: integer
+          format: int64
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrainVideo'
+        current:
+          type: integer
+          format: int64
+        pages:
+          type: integer
+          format: int64
+      description: 响应数据
+    ResultIPageTrainVideo:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          format: int32
+        message:
+          type: string
+          description: 响应消息
+        data:
+          $ref: '#/components/schemas/IPageTrainVideo'
+      description: 统一响应结果
+    ResultTrainRandomQuestionOutDTO:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          format: int32
+        message:
+          type: string
+          description: 响应消息
+        data:
+          $ref: '#/components/schemas/TrainRandomQuestionOutDTO'
+      description: 统一响应结果
+    TrainRandomQuestionOutDTO:
+      type: object
+      properties:
+        paperId:
+          type: string
+          description: 试卷ID
+        startTime:
+          type: integer
+          description: 开始时间 时间戳
+          format: int64
+        trainRandomQuestionInfoList:
+          type: array
+          description: 随机抽取的题目信息
+          items:
+            $ref: '#/components/schemas/TrainRandomQuestionInfo'
+      description: 随机抽取的题目试卷
+    IPageSysUser:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int64
+        total:
+          type: integer
+          format: int64
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/SysUser'
+        current:
+          type: integer
+          format: int64
+        pages:
+          type: integer
+          format: int64
+      description: 响应数据
+    ResultIPageSysUser:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          format: int32
+        message:
+          type: string
+          description: 响应消息
+        data:
+          $ref: '#/components/schemas/IPageSysUser'
+      description: 统一响应结果
+    IPageSysRole:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int64
+        total:
+          type: integer
+          format: int64
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/SysRole'
+        current:
+          type: integer
+          format: int64
+        pages:
+          type: integer
+          format: int64
+      description: 响应数据
+    ResultIPageSysRole:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          format: int32
+        message:
+          type: string
+          description: 响应消息
+        data:
+          $ref: '#/components/schemas/IPageSysRole'
+      description: 统一响应结果
+    ResultListSysRole:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          format: int32
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: array
+          description: 响应数据
+          items:
+            $ref: '#/components/schemas/SysRole'
+      description: 统一响应结果
+    IPageSysOrg:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int64
+        total:
+          type: integer
+          format: int64
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/SysOrg'
+        current:
+          type: integer
+          format: int64
+        pages:
+          type: integer
+          format: int64
+      description: 响应数据
+    ResultIPageSysOrg:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          format: int32
+        message:
+          type: string
+          description: 响应消息
+        data:
+          $ref: '#/components/schemas/IPageSysOrg'
+      description: 统一响应结果
+    ResultListSysOrg:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          format: int32
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: array
+          description: 响应数据
+          items:
+            $ref: '#/components/schemas/SysOrg'
+      description: 统一响应结果
+    ResultListSysMenu:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+          format: int32
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: array
+          description: 响应数据
+          items:
+            $ref: '#/components/schemas/SysMenu'
+      description: 统一响应结果
+    SysMenu:
+      type: object
+      properties:
+        menuId:
+          type: integer
+          description: 菜单ID
+          format: int64
+        menuName:
+          type: string
+          description: 菜单名称
+        parentId:
+          type: integer
+          description: 父菜单ID
+          format: int64
+        path:
+          type: string
+          description: 菜单路径
+        perms:
+          type: string
+          description: 权限标识
+        type:
+          type: integer
+          description: 菜单类型
+          format: int32
+          example: 0
+        sort:
+          type: integer
+          description: 排序序号
+          format: int32
+        status:
+          type: integer
+          description: 状态
+          format: int32
+          example: 1
+        createTime:
+          type: string
+          description: 创建时间
+          format: date-time
+        children:
+          type: array
+          description: 子菜单列表
+          items:
+            $ref: '#/components/schemas/SysMenu'
+      description: 菜单实体类
+  securitySchemes:
+    JWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
